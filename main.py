@@ -119,6 +119,8 @@ def main():
 
     #
 
+    count = 0
+
     for batch_idx, (inputs, _,
         indexes) in enumerate(tqdm.tqdm(train_loader)):
     #             optimizer.zero_grad()
@@ -126,6 +128,13 @@ def main():
     #             indexes = indexes.to(device, non_blocking=True)
     # CNN backbone処理
         features = norm(net(inputs))
+        features_np = features.cpu().detach().numpy().copy()
+
+        if count == 0:
+            features_concat = features_np
+            count = 1
+        else :
+            features_concat = np.concatenate([features_concat, features_np])
                 # outputs = npc(features, indexes)
     #             loss_id, loss_fd = loss(outputs, features, indexes)
     #             tot_loss = loss_id + loss_fd
@@ -147,7 +156,8 @@ def main():
     #
     #         # check clustering acc
     #         if (epoch == 0) or (((epoch + 1) % 100) == 0):
-    acc, nmi, ari = check_clustering_metrics(features, train_loader)
+    # acc, nmi, ari = check_clustering_metrics(features, train_loader)
+    acc, nmi, ari = check_clustering_metrics(features_concat, train_loader)
                  # acc, nmi, ari = check_clustering_metrics(npc, train_loader)
     #             # 結果出力 100回やるたびに結果がよくなってることを確認
     print("Epoch:{} Kmeans ACC, NMI, ARI = {}, {}, {}".format(0,acc, nmi, ari))
@@ -180,8 +190,9 @@ class CIFAR10(datasets.CIFAR10):
 def check_clustering_metrics(features, train_loader):
     # Instance discriminate softmaxに溜まっていくデータを使っている?
     # trainFeatures = npc.memory
-    trainFeatures = features
-    z = trainFeatures.cpu().numpy()
+    # trainFeatures = features
+    z = features
+    # z = trainFeatures.cpu().numpy()
     # z = trainFeatures.tensor.detach().numpy()
     # 正解データらしいもの
     y = np.array(train_loader.dataset.targets)
