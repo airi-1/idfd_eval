@@ -60,7 +60,8 @@ def main():
     train_loader = torch.utils.data.DataLoader(trainset,
     # ミニバッチ学習(読み込んだデータセットから128枚取り出して学習に使う)
                                                batch_size=128,
-                                               shuffle=True,
+    # データの順序(学習=True 推論=False)
+                                               shuffle=False,
                                                pin_memory=True,
                                                num_workers=args.num_workers)
 
@@ -89,6 +90,12 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                         [600, 950, 1300, 1650],
                                                         gamma=0.1)
+
+    load_path = './drive/MyDrive/idfd_epoch_1999.pth'
+    load_weights = torch.load(load_path,map_location=device)
+    # 余分なキーが含まれていても無視してくれるらしい
+    net.load_state_dict(load_weights,strict=False)
+
     if torch.cuda.is_available():
         # GPUを並列に使用
         net = torch.nn.DataParallel(net,
@@ -102,10 +109,6 @@ def main():
     # add -----------------------------------
     # 学習済みモデルの読み込み
     # load_path = './mnt/nvme/internship/idfd_epoch_1999.pth'
-    load_path = './drive/MyDrive/idfd_epoch_1999.pth'
-    load_weights = torch.load(load_path,map_location=device)
-    # 余分なキーが含まれていても無視してくれるらしい
-    net.load_state_dict(load_weights,strict=False)
 
     net.eval()    # 評価モード
     # add -----------------------------------
@@ -118,6 +121,8 @@ def main():
     # with tqdm.trange(2000) as epoch_bar:
     #     for epoch in epoch_bar:
 
+    # 評価時間計測 start
+    start_eval_time = time.perf_counter()
     count = 0
     for batch_idx, (inputs, _,
         indexes) in enumerate(tqdm.tqdm(train_loader)):
@@ -160,6 +165,12 @@ def main():
     acc, nmi, ari = check_clustering_metrics(features_concat, train_loader)
                  # acc, nmi, ari = check_clustering_metrics(npc, train_loader)
     #             # 結果出力 100回やるたびに結果がよくなってることを確認
+
+    # 評価時間計測 end
+    end_eval_time = time.perf_counter()
+    eval_measure = end_eval_time - start_eval_time
+    print("eval_measure")
+    print(eval_measure)
     print("Epoch:{} Kmeans ACC, NMI, ARI = {}, {}, {}".format(0,acc, nmi, ari))
         # print("Epoch:{} Kmeans ACC, NMI, ARI = {}, {}, {}".format(epoch+1, acc, nmi, ari))
 
@@ -304,9 +315,9 @@ class Loss(nn.Module):
 # プログラムがコマンドラインから呼ばれた時
 if __name__ == "__main__":
     # time関数
-    start = time.perf_counter()
+    start_all_time = time.perf_counter()
     main()
-    finish = time.perf_counter()
-    measure = finish - start
-    print("measure_time:")
-    print(measure)
+    end_all_time = time.perf_counter()
+    all_measure = end_all_time - start_all_time
+    print("all_measure_time:")
+    print(all_measure)
