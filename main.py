@@ -103,7 +103,7 @@ def main():
     # 学習済みモデルの読み込み
     # load_path = './mnt/nvme/internship/idfd_epoch_1999.pth'
     load_path = './drive/MyDrive/idfd_epoch_1999.pth'
-    load_weights = torch.load(load_path)
+    load_weights = torch.load(load_path,map_location=device)
     # 余分なキーが含まれていても無視してくれるらしい
     net.load_state_dict(load_weights,strict=False)
 
@@ -118,10 +118,7 @@ def main():
     # with tqdm.trange(2000) as epoch_bar:
     #     for epoch in epoch_bar:
 
-    #
-
     count = 0
-
     for batch_idx, (inputs, _,
         indexes) in enumerate(tqdm.tqdm(train_loader)):
     #             optimizer.zero_grad()
@@ -130,7 +127,8 @@ def main():
     # CNN backbone処理
 
         features = norm(net(inputs))
-        features_np = features.cpu().detach().numpy().copy()
+        features_np = features.cpu().detach().numpy()
+        # features_np = features.cpu().detach().numpy().cppy
         if count == 0:
             features_concat = features_np
             count = 1
