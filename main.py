@@ -10,6 +10,7 @@ from scipy.optimize import linear_sum_assignment
 import tqdm.autonotebook as tqdm
 
 import torch
+import time
 import torch.nn as nn
 from torch.autograd import Function
 import torch.nn.functional as F
@@ -127,14 +128,15 @@ def main():
         inputs = inputs.to(device, dtype=torch.float32, non_blocking=True)
     #             indexes = indexes.to(device, non_blocking=True)
     # CNN backbone処理
+
         features = norm(net(inputs))
         features_np = features.cpu().detach().numpy().copy()
-
         if count == 0:
             features_concat = features_np
             count = 1
         else :
             features_concat = np.concatenate([features_concat, features_np])
+
                 # outputs = npc(features, indexes)
     #             loss_id, loss_fd = loss(outputs, features, indexes)
     #             tot_loss = loss_id + loss_fd
@@ -303,4 +305,10 @@ class Loss(nn.Module):
 
 # プログラムがコマンドラインから呼ばれた時
 if __name__ == "__main__":
+    # time関数
+    start = time.perf_counter()
     main()
+    finish = time.perf_counter()
+    measure = finish - start
+    print("measure_time:")
+    print(measure)
